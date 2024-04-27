@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set environment and algorithm variables
-ENV="lunalander"
-ENV_STYLE="v"
+ENV="minigrid"
+ENV_STYLE="MiniGrid-SimpleCrossingS11N5-v0"
 ALGO="sacd"
 
 # Run Python script
