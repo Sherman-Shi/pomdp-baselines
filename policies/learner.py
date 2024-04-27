@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 import gym
+import wandb 
 
 from .models import AGENT_CLASSES, AGENT_ARCHS
 from torchkit.networks import ImageEncoder
@@ -376,8 +377,10 @@ class Learner:
         last_eval_num_iters = 0
         while self._n_env_steps_total < self.n_env_steps_total:
             # collect data from num_rollouts_per_iter train tasks:
-            env_steps = self.collect_rollouts(num_rollouts=self.num_rollouts_per_iter)
+            env_steps, average_episodic_rewards = self.collect_rollouts(num_rollouts=self.num_rollouts_per_iter)
             logger.log("env steps", self._n_env_steps_total)
+            # Log to wandb
+            wandb.log({"average_episodic_rewards": average_episodic_rewards, "_n_env_steps_total": self._n_env_steps_total})
 
             train_stats = self.update(
                 self.num_updates_per_iter
@@ -410,10 +413,11 @@ class Learner:
         """collect num_rollouts of trajectories in task and save into policy buffer
         :param random_actions: whether to use policy to sample actions, or randomly sample action space
         """
-
+        episodic_rewards = []
         before_env_steps = self._n_env_steps_total
         for idx in range(num_rollouts):
             steps = 0
+            episode_reward = 0
 
             if self.env_type == "meta" and self.train_env.n_tasks is not None:
                 task = self.train_tasks[np.random.randint(len(self.train_tasks))]
@@ -472,6 +476,7 @@ class Learner:
                 done_rollout = False if ptu.get_numpy(done[0][0]) == 0.0 else True
                 # update statistics
                 steps += 1
+                episode_reward += reward.item()
 
                 ## determine terminal flag per environment
                 if self.env_type == "meta" and "is_goal_state" in dir(
@@ -537,9 +542,14 @@ class Learner:
                 print(
                     f"steps: {steps} term: {term} ret: {torch.cat(rew_list, dim=0).sum().item():.2f}"
                 )
+
+            episodic_rewards.append(episode_reward)
             self._n_env_steps_total += steps
             self._n_rollouts_total += 1
-        return self._n_env_steps_total - before_env_steps
+
+        average_episodic_reward = sum(episodic_rewards) / num_rollouts
+
+        return self._n_env_steps_total - before_env_steps, average_episodic_reward
 
     def sample_rl_batch(self, batch_size):
         """sample batch of episodes for vae training"""

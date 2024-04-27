@@ -10,6 +10,7 @@ from absl import flags
 from utils import system, logger
 from pathlib import Path
 import psutil
+import wandb 
 
 from torchkit.pytorch_utils import set_gpu_mode
 from policies.learner import Learner
@@ -35,6 +36,9 @@ flags.DEFINE_boolean("debug", False, "debug mode")
 flags.FLAGS(sys.argv)
 yaml = YAML()
 v = yaml.load(open(FLAGS.cfg))
+
+wandb.init(project='pomdp_baselines', entity='sonnol')
+wandb.config.update(v)
 
 # overwrite config params
 if FLAGS.env is not None:
