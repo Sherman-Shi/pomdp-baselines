@@ -1,5 +1,5 @@
 seed: 7
-cuda: 2 # use_gpu
+cuda: 1 # use_gpu
 env:
   env_type: pomdp
   env_name: AntBLT-P-v0
