@@ -107,17 +107,17 @@ class Learner:
 
             assert num_eval_tasks > 0
             self.train_env = gym.make(env_name)
-            self.train_env.seed(self.seed)
-            self.train_env.action_space.np_random.seed(self.seed)  # crucial
+            #self.train_env.seed(self.seed)
+            #self.train_env.action_space.np_random.seed(self.seed)  # crucial
 
             self.eval_env = self.train_env
-            self.eval_env.seed(self.seed + 1)
+            #self.eval_env.seed(self.seed + 1)
 
             self.train_tasks = []
             self.eval_tasks = num_eval_tasks * [None]
 
             self.max_rollouts_per_task = 1
-            self.max_trajectory_len = self.train_env._max_episode_steps
+            self.max_trajectory_len = self.train_env.spec.max_episode_steps
 
         elif self.env_type == "atari":
             from envs.atari import create_env
@@ -134,7 +134,7 @@ class Learner:
             self.eval_tasks = num_eval_tasks * [None]
 
             self.max_rollouts_per_task = 1
-            self.max_trajectory_len = self.train_env._max_episode_steps
+            self.max_trajectory_len = self.train_env.spec.max_episode_steps
 
         elif self.env_type == "rmdp":  # robust mdp task, using robust mdp wrapper
             sys.path.append("envs/rl-generalization")
@@ -205,7 +205,7 @@ class Learner:
             assert self.train_env.action_space.__class__.__name__ == "Discrete"
             self.act_dim = self.train_env.action_space.n
             self.act_continuous = False
-        self.obs_dim = self.train_env.observation_space.shape[0]  # include 1-dim done
+        self.obs_dim = self.train_env.observation_space['image'].rehape(-1).shape[0]  # include 1-dim done
         logger.log("obs_dim", self.obs_dim, "act_dim", self.act_dim)
 
     def init_agent(
