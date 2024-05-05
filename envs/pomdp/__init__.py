@@ -1,5 +1,6 @@
-from gym.envs.registration import register
-import gym
+from gymnasium.envs.registration import register
+import gymnasium as gym 
+import pybullet_envs
 
 # Notation:
 # F: full observed (original env)
@@ -30,25 +31,25 @@ register(
 )
 
 register(
-    "CartPole-F-v0",
+    "CartPole-F-v1",
     entry_point="envs.pomdp.wrappers:POMDPWrapper",
     kwargs=dict(
-        env=gym.make("CartPole-v0"), partially_obs_dims=[0, 1, 2, 3]
+        env=gym.make("CartPole-v1"), partially_obs_dims=[0, 1, 2, 3]
     ),  # angle & velocity
     max_episode_steps=200,  # reward threshold for solving the task: 195
 )
 
 register(
-    "CartPole-P-v0",
+    "CartPole-P-v1",
     entry_point="envs.pomdp.wrappers:POMDPWrapper",
-    kwargs=dict(env=gym.make("CartPole-v0"), partially_obs_dims=[0, 2]),
+    kwargs=dict(env=gym.make("CartPole-v1"), partially_obs_dims=[0, 2]),
     max_episode_steps=200,
 )
 
 register(
-    "CartPole-V-v0",
+    "CartPole-V-v1",
     entry_point="envs.pomdp.wrappers:POMDPWrapper",
-    kwargs=dict(env=gym.make("CartPole-v0"), partially_obs_dims=[1, 3]),
+    kwargs=dict(env=gym.make("CartPole-v1"), partially_obs_dims=[1, 3]),
     max_episode_steps=200,
 )
 
@@ -95,6 +96,8 @@ np.concatenate(
     # odd elements  [1::2] angular speed, scaled to show -1..+1
 [self.feet_contact], # depends on foot_list, belongs to pos
 ])
+"""
+
 """
 register(
     "HopperBLT-F-v0",
@@ -251,3 +254,4 @@ register(
     ),  # vel
     max_episode_steps=1000,
 )
+"""

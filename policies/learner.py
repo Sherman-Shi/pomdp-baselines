@@ -205,7 +205,7 @@ class Learner:
             assert self.train_env.action_space.__class__.__name__ == "Discrete"
             self.act_dim = self.train_env.action_space.n
             self.act_continuous = False
-        self.obs_dim = self.train_env.observation_space['image'].rehape(-1).shape[0]  # include 1-dim done
+        self.obs_dim = self.train_env.observation_space.shape[0]  # include 1-dim done
         logger.log("obs_dim", self.obs_dim, "act_dim", self.act_dim)
 
     def init_agent(
@@ -423,7 +423,10 @@ class Learner:
                 task = self.train_tasks[np.random.randint(len(self.train_tasks))]
                 obs = ptu.from_numpy(self.train_env.reset(task=task))  # reset task
             else:
-                obs = ptu.from_numpy(self.train_env.reset())  # reset
+                obs = self.train_env.reset()  # This might be a tuple
+                if isinstance(obs, tuple):
+                    obs = obs[0] 
+                obs = ptu.from_numpy(obs)  # reset
 
             obs = obs.reshape(1, obs.shape[-1])
             done_rollout = False
@@ -606,8 +609,11 @@ class Learner:
                 obs = ptu.from_numpy(self.eval_env.reset(task=task))  # reset task
                 observations[task_idx, step, :] = ptu.get_numpy(obs[:obs_size])
             else:
-                obs = ptu.from_numpy(self.eval_env.reset())  # reset
-
+                obs = self.train_env.reset()  # This might be a tuple
+                if isinstance(obs, tuple):
+                    obs = obs[0] 
+                obs = ptu.from_numpy(obs)  # reset
+                
             obs = obs.reshape(1, obs.shape[-1])
 
             if self.agent_arch == AGENT_ARCHS.Memory:
