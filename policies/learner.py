@@ -117,7 +117,7 @@ class Learner:
             self.eval_tasks = num_eval_tasks * [None]
 
             self.max_rollouts_per_task = 1
-            self.max_trajectory_len = self.train_env.spec.max_episode_steps
+            self.max_trajectory_len = self.train_env.max_steps
 
         elif self.env_type == "atari":
             from envs.atari import create_env
@@ -205,7 +205,7 @@ class Learner:
             assert self.train_env.action_space.__class__.__name__ == "Discrete"
             self.act_dim = self.train_env.action_space.n
             self.act_continuous = False
-        self.obs_dim = self.train_env.observation_space.shape[0]  # include 1-dim done
+        self.obs_dim = np.prod(self.train_env.observation_space["image"].shape)  # include 1-dim done
         logger.log("obs_dim", self.obs_dim, "act_dim", self.act_dim)
 
     def init_agent(
@@ -426,9 +426,10 @@ class Learner:
                 obs = self.train_env.reset()  # This might be a tuple
                 if isinstance(obs, tuple):
                     obs = obs[0] 
+                obs = obs["image"]
                 obs = ptu.from_numpy(obs)  # reset
 
-            obs = obs.reshape(1, obs.shape[-1])
+            obs = obs.reshape(1, -1)
             done_rollout = False
 
             if self.agent_arch in [AGENT_ARCHS.Memory, AGENT_ARCHS.Memory_Markov]:
@@ -599,7 +600,7 @@ class Learner:
             ]  # original size
             observations = np.zeros((len(tasks), self.max_trajectory_len + 1, obs_size))
         else:  # pomdp, rmdp, generalize
-            num_steps_per_episode = self.eval_env._max_episode_steps
+            num_steps_per_episode = self.eval_env.max_steps
             observations = None
 
         for task_idx, task in enumerate(tasks):
@@ -609,12 +610,13 @@ class Learner:
                 obs = ptu.from_numpy(self.eval_env.reset(task=task))  # reset task
                 observations[task_idx, step, :] = ptu.get_numpy(obs[:obs_size])
             else:
-                obs = self.train_env.reset()  # This might be a tuple
+                obs = self.eval_env.reset()  # This might be a tuple
                 if isinstance(obs, tuple):
                     obs = obs[0] 
+                obs = obs["image"]
                 obs = ptu.from_numpy(obs)  # reset
-                
-            obs = obs.reshape(1, obs.shape[-1])
+
+            obs = obs.reshape(1, -1)
 
             if self.agent_arch == AGENT_ARCHS.Memory:
                 # assume initial reward = 0.0

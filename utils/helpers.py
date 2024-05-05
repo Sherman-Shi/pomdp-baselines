@@ -52,8 +52,9 @@ def env_step(env, action):
     next_obs, reward, terminated, truncated, info = env.step(action)
     done = terminated or truncated  # Both signify the end of an episode
 
+    next_obs = next_obs['image']
     # move to torch
-    next_obs = ptu.from_numpy(next_obs).view(-1, next_obs.shape[0])
+    next_obs = ptu.from_numpy(next_obs).view(-1, np.prod(next_obs.shape))
     reward = ptu.FloatTensor([reward]).view(-1, 1)
     done = ptu.from_numpy(np.array(done, dtype=int)).view(-1, 1)
 
